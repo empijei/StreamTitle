@@ -1,0 +1,34 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Roboto', sans-serif;
+    font-size: larger;
+}
+
+.content {
+  display: block;
+}
+
+.typing{
+    font-family: 'VT323', monospace;;
+    font-size: larger;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    filter: invert() hue-rotate(180deg) contrast(80%);
+  }
+  html img {
+    filter: invert() hue-rotate(180deg) contrast(100%);
+  }
+  html video {
+    filter: invert() hue-rotate(180deg) contrast(100%);
+  }
+  html .highlight {
+    filter: invert() hue-rotate(180deg) contrast(100%);
+  }
+  body {
+    background: white !important;
+  }
+}
