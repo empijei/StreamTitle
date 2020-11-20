@@ -13,13 +13,16 @@ type ctxKeyType string
 const ctxKey ctxKeyType = "CSP nonce context key"
 
 // Protect protects an handler with CSP
-func Protect(h http.Handler) http.HandlerFunc {
+func Protect(h http.Handler, withTrustedTypesToo bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nonce := genNonce()
-		w.Header().Set("Content-Security-Policy", "object-src 'none';"+
+		w.Header().Add("Content-Security-Policy", "object-src 'none';"+
 			"script-src 'nonce-"+nonce+"' 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http:;"+
 			"base-uri 'none';"+
 			"report-uri https://your-report-collector.example.com/")
+		if withTrustedTypesToo {
+			w.Header().Add("Content-Security-Policy", "require-trusted-types-for 'script'")
+		}
 		r = r.WithContext(context.WithValue(r.Context(), ctxKey, nonce))
 		h.ServeHTTP(w, r)
 	}

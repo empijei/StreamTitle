@@ -86,6 +86,7 @@ func (s *server) notesHandler() http.HandlerFunc {
 			OwnerOfPage: ownerOfPage,
 			User:        user,
 		}
+		//data.escape()
 		renderTemplate(w, "notes.tpl.html", data)
 	})
 }
