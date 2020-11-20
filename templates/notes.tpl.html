@@ -1,0 +1,51 @@
+<h1> Hi "<a href="{{.User}}">{{.User}}</a>" (<a href="/logout">logout</a>)
+    {{- if ne .User .OwnerOfPage}} you are visiting "<a href="{{.OwnerOfPage}}">{{.OwnerOfPage}}</a>".{{end -}}
+</h1>
+<h2> {{- if ne .User .OwnerOfPage -}}
+    Leave a note for "{{.OwnerOfPage}}":
+    {{- else -}}
+    Create a note:
+    {{- end -}}</h2>
+<form action="/addnote" method="POST" id="addnote_form">
+    {{- if eq .User .OwnerOfPage -}}
+    <input type="checkbox" name="private" value="Private">
+    <label for="private">Private</label><br><br>
+    {{- end -}}
+    Title: <input type="text" name="title">
+    <input type="submit">
+    <input type="hidden" name="target_user" value="{{.OwnerOfPage}}">
+</form>
+<textarea class="typing" id="textarea_form" rows="4" cols="50" name="text" form="addnote_form">
+    </textarea>
+<br>
+{{- if ne .User .OwnerOfPage -}}
+<button onclick='addSignature("for {{.OwnerOfPage}} by {{.User}}")'>add signature</button>
+{{- end -}}
+<div>
+    <h2> Visit someone else's notes: </h2>
+    <form action="/notes" method="GET" id="visit_user_form">
+        Go to user: <input type="text" name="user">
+        <input type="submit" value="go" class="hidden">
+    </form>
+    {{ if ne 0 (len .Notes) }}
+    <h2>
+        {{- if ne .User .OwnerOfPage -}}
+        Notes owned by "{{.OwnerOfPage}}":
+        {{- else -}}
+        Your notes:
+        {{- end -}}
+        (<a href="#" onclick="window.location.href=window.location.href">Reload</a>)
+    </h2>
+    {{ range .Notes }}
+    <h2>{{.Title}}</h2>
+    <p class="typing">
+        {{.Text}}
+    </p>
+    {{ end }}
+    {{ else }}
+    <p>
+        There are no notes.
+        (<a href="#" onclick="window.location.href=window.location.href">Reload</a>)
+    </p>
+    {{ end }}
+</div>

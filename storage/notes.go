@@ -38,13 +38,16 @@ func (n *Notes) GetNotes(user string, private bool) []Note {
 	return ns
 }
 
-// AddNote adds or overwrite the given note for the given user.
+// AddNote adds a note for user. If the note already exists it is discarded.
 func (n *Notes) AddNote(user string, add Note) {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 	u := n.notes[user]
 	if u == nil {
 		u = map[string]Note{}
+	}
+	if u[add.Title] != (Note{}) {
+		return
 	}
 	u[add.Title] = add
 	n.notes[user] = u

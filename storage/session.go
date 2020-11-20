@@ -45,16 +45,16 @@ func (s *Sessions) GetToken(user string) (token string) {
 	return token
 }
 
-// DelToken removes the given token from the storage
-func (s *Sessions) DelToken(token string) {
+// DelTokenForUser removes the token for the given user.
+func (s *Sessions) DelTokenForUser(user string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	usr, has := s.byTok[token]
+	token, has := s.byUsr[user]
 	if !has {
 		return
 	}
 	delete(s.byTok, token)
-	delete(s.byUsr, usr)
+	delete(s.byUsr, user)
 }
 
 func genToken() string {

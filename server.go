@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -23,8 +24,8 @@ func newServer() *server {
 		creds:    storage.NewCredentials(),
 	}
 	s.mux.Handle("/notes/", s.notesHandler())
-	s.mux.Handle("/me", s.meHandler())
 	s.mux.Handle("/login", s.loginHandler())
+	s.mux.Handle("/logout", s.logoutHandler())
 	s.mux.Handle("/addnote", s.addNoteHandler())
 	s.mux.Handle("/static/", http.StripPrefix("/static/", s.staticHandler()))
 	s.mux.Handle("/", s.indexHandler())
@@ -51,89 +52,80 @@ func (s *server) staticHandler() http.HandlerFunc {
 
 func (s *server) indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		usr := s.getUser(r)
-		if usr == "" {
-			renderPage(w, loginForm)
+		if p := r.URL.Path; p != "" && p != "/index.html" && p != "/" {
+			http.Redirect(w, r, "/notes/"+r.URL.Path, http.StatusTemporaryRedirect)
 			return
 		}
-		http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+		usr := s.getUser(r)
+		if usr == "" {
+			renderTemplate(w, "login.tpl.html", nil)
+			return
+		}
+		http.Redirect(w, r, "/notes/"+usr, http.StatusTemporaryRedirect)
 	}
 }
 
 func (s *server) notesHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		visitingUser := s.getUser(r)
-		pos := strings.LastIndex(r.URL.Path, "/")
-		viewedUser := r.URL.Path[pos+1:]
+	return s.checkAuth(func(w http.ResponseWriter, r *http.Request) {
+		user := s.getUser(r)
+		ownerOfPage := r.FormValue("user")
+		if ownerOfPage == "" {
+			pos := strings.LastIndex(r.URL.Path, "/")
+			ownerOfPage = r.URL.Path[pos+1:]
+		}
 		var notes []storage.Note
-		if visitingUser == viewedUser {
+		if user == ownerOfPage {
 			// Render all notes, the user is viewing its own data.
-			notes = s.notes.GetNotes(viewedUser, true /*show private*/)
+			notes = s.notes.GetNotes(ownerOfPage, true /*show private*/)
 		} else {
 			// Only render public notes.
-			notes = s.notes.GetNotes(viewedUser, false /*no show private*/)
+			notes = s.notes.GetNotes(ownerOfPage, false /*no show private*/)
 		}
-		var sb strings.Builder
-		data := map[string]interface{}{
-			"Notes":        notes,
-			"ViewedUser":   viewedUser,
-			"VisitingUser": visitingUser,
+		data := noteTplData{
+			Notes:       notes,
+			OwnerOfPage: ownerOfPage,
+			User:        user,
 		}
-		if err := listNotesTpl.Execute(&sb, data); err != nil {
-			log.Println(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		renderPage(w, sb.String())
-	}
+		renderTemplate(w, "notes.tpl.html", data)
+	})
 }
 
 func (s *server) loginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
 		uname := r.FormValue("uname")
 		passwd := r.FormValue("password")
 		if s.creds.HasUser(uname) {
 			if !s.creds.AuthUser(uname, passwd) {
-				renderPage(w, `Invalid password, please <a href="/">retry logging in.</a>`)
+				msg := fmt.Sprintf(`Invalid password for "%s", please <a href="/">retry logging in.</a>`, uname)
+				renderData(w, template.HTML(msg))
 				return
 			}
 		} else {
 			s.creds.AddUser(uname, passwd)
 		}
 		setSession(w, s.sessions.GetToken(uname))
-		http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/notes/"+uname, http.StatusTemporaryRedirect)
 	}
 }
 
-func (s *server) meHandler() http.HandlerFunc {
-	return s.checkAuth(func(w http.ResponseWriter, r *http.Request) {
-		usr := s.getUser(r)
-		notes := s.notes.GetNotes(usr, true /*show private*/)
-		var sb strings.Builder
-		data := map[string]interface{}{
-			"Notes": notes,
-			"User":  usr,
-		}
-		if err := myNotesTpl.Execute(&sb, data); err != nil {
-			log.Println(err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		renderPage(w, sb.String())
-	})
+func (s *server) logoutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		setSession(w, "")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	}
 }
 
 func (s *server) addNoteHandler() http.HandlerFunc {
 	return s.checkAuth(func(w http.ResponseWriter, r *http.Request) {
-		s.notes.AddNote(s.getUser(r), storage.Note{
-			Title:   r.FormValue("title"),
-			Text:    r.FormValue("text"),
-			Private: r.FormValue("private") != "",
-		})
-		http.Redirect(w, r, "/me", http.StatusTemporaryRedirect)
+		usr := r.FormValue("target_user")
+		n := storage.Note{
+			Title: r.FormValue("title"),
+			Text:  r.FormValue("text"),
+		}
+		if usr == s.getUser(r) { // Only allow owners to set private bit
+			n.Private = r.FormValue("private") != ""
+		}
+		s.notes.AddNote(usr, n)
+		http.Redirect(w, r, "/notes/"+usr, http.StatusTemporaryRedirect)
 	})
 }

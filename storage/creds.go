@@ -31,6 +31,9 @@ var ErrAlreadyExists = errors.New("Already exists")
 
 // AddUser adds a user to the storage if it is not already there.
 func (c *Credentials) AddUser(name, password string) error {
+	if password == "" {
+		return errors.New("Password cannot be empty")
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if _, has := c.users[name]; has {
@@ -42,6 +45,9 @@ func (c *Credentials) AddUser(name, password string) error {
 
 // AuthUser validates the provided credentials against the storage.
 func (c *Credentials) AuthUser(name, password string) bool {
+	if password == "" {
+		return false
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	pw, has := c.users[name]
