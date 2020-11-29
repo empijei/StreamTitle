@@ -19,7 +19,7 @@
     </textarea>
 <br>
 {{- if ne .User .OwnerOfPage -}}
-<button onclick='addSignature("for {{.OwnerOfPageJS}} by {{.UserJS}}")'>add signature</button>
+<button id="signature_button" data-owner="{{.OwnerOfPage}}" data-user="{{.User}}">add signature</button>
 {{- end -}}
 <div>
     <h2> Visit someone else's notes: </h2>
