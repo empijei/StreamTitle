@@ -5,12 +5,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <script src="/static/scripts.js"></script>
+    <script src="/static/scripts.js" nonce="{{.CSPNonce}}"></script>
 </head>
 
 <body>
     <div class="content">
-        {{.}}
+        {{.Data}}
     </div>
 </body>
 

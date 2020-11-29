@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/empijei/streamtitle/csp"
 	"github.com/empijei/streamtitle/storage"
 )
 
 type server struct {
-	mux      *http.ServeMux
+	mux      http.Handler
 	notes    *storage.Notes
 	sessions *storage.Sessions
 	creds    *storage.Credentials
@@ -16,17 +17,18 @@ type server struct {
 
 func newServer() *server {
 	s := server{
-		mux:      http.NewServeMux(),
 		notes:    storage.NewNotes(),
 		sessions: storage.NewSessions(),
 		creds:    storage.NewCredentials(),
 	}
-	s.mux.Handle("/notes/", s.notesHandler())
-	s.mux.Handle("/login", s.loginHandler())
-	s.mux.Handle("/logout", s.logoutHandler())
-	s.mux.Handle("/addnote", s.addNoteHandler())
-	s.mux.Handle("/static/", http.StripPrefix("/static/", s.staticHandler()))
-	s.mux.Handle("/", s.indexHandler())
+	mux := http.NewServeMux()
+	mux.Handle("/notes/", s.notesHandler())
+	mux.Handle("/login", s.loginHandler())
+	mux.Handle("/logout", s.logoutHandler())
+	mux.Handle("/addnote", s.addNoteHandler())
+	mux.Handle("/static/", http.StripPrefix("/static/", s.staticHandler()))
+	mux.Handle("/", s.indexHandler())
+	s.mux = csp.Protect(mux, true)
 	return &s
 }
 
@@ -56,7 +58,7 @@ func (s *server) indexHandler() http.HandlerFunc {
 		}
 		usr := s.getUser(r)
 		if usr == "" {
-			renderTemplate(w, "login.tpl.html", nil)
+			renderTemplate(w, r, "login.tpl.html", nil)
 			return
 		}
 		http.Redirect(w, r, "/notes/"+usr, http.StatusTemporaryRedirect)
@@ -85,7 +87,7 @@ func (s *server) notesHandler() http.HandlerFunc {
 			User:        user,
 		}
 		//data.escape()
-		renderTemplate(w, "notes.tpl.html", data)
+		renderTemplate(w, r, "notes.tpl.html", data)
 	})
 }
 
@@ -95,7 +97,7 @@ func (s *server) loginHandler() http.HandlerFunc {
 		passwd := r.FormValue("password")
 		if s.creds.HasUser(uname) {
 			if !s.creds.AuthUser(uname, passwd) {
-				renderTemplate(w, "invalid_pw.tpl.html", uname)
+				renderTemplate(w, r, "invalid_pw.tpl.html", uname)
 				return
 			}
 		} else {

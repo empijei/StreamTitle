@@ -22,7 +22,7 @@ func (s *server) checkAuth(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		usr := s.getUser(r)
 		if usr == "" {
-			renderTemplate(w, "login_first.tpl.html", nil)
+			renderTemplate(w, r, "login_first.tpl.html", nil)
 			return
 		}
 		h.ServeHTTP(w, r)

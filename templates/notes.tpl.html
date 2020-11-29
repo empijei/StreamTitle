@@ -15,8 +15,7 @@
     <input type="submit">
     <input type="hidden" name="target_user" value="{{.OwnerOfPage}}">
 </form>
-<textarea class="typing" id="textarea_form" rows="4" cols="50" name="text" form="addnote_form">
-    </textarea>
+<textarea class="typing" id="textarea_form" rows="4" cols="50" name="text" form="addnote_form"></textarea>
 <br>
 {{- if ne .User .OwnerOfPage -}}
 <button id="signature_button" data-owner="{{.OwnerOfPage}}" data-user="{{.User}}">add signature</button>
