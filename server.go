@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -97,8 +95,7 @@ func (s *server) loginHandler() http.HandlerFunc {
 		passwd := r.FormValue("password")
 		if s.creds.HasUser(uname) {
 			if !s.creds.AuthUser(uname, passwd) {
-				msg := fmt.Sprintf(`Invalid password for "%s", please <a href="/">retry logging in.</a>`, uname)
-				renderData(w, template.HTML(msg))
+				renderTemplate(w, "invalid_pw.tpl.html", uname)
 				return
 			}
 		} else {
