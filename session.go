@@ -5,7 +5,10 @@ import "net/http"
 const sessionCookie = "SESSION"
 
 func setSession(w http.ResponseWriter, value string) {
-	c := http.Cookie{Name: sessionCookie, Value: value}
+	c := http.Cookie{
+		Name:  sessionCookie,
+		Value: value,
+	}
 	http.SetCookie(w, &c)
 }
 

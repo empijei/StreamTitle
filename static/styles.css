@@ -33,6 +33,6 @@ body {
     filter: invert() hue-rotate(180deg) contrast(100%);
   }
   body {
-    background: white !important;
+    background: black !important;
   }
 }

@@ -9,4 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // There would normally be one script per page, but let's
     // keep this simple and use an "if" instead.
     if (btn) btn.addEventListener('click', addSignature);
+
+    const reload = document.getElementById("reload_link");
+    if (reload) reload.addEventListener('click', () => {
+        window.location.href = window.location.href;
+    })
 })

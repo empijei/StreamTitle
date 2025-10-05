@@ -33,7 +33,7 @@ func genNonce() string {
 	b := make([]byte, 20)
 	_, err := rand.Read(b)
 	if err != nil {
-		panic(fmt.Errorf("failed to generate entropy using crypto/rand/RandReader: %v", err))
+		panic(fmt.Errorf("failed to generate CSP nonce: %v", err))
 	}
 	return base64.RawStdEncoding.EncodeToString(b)
 }

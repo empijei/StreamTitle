@@ -14,6 +14,7 @@
     Title: <input type="text" name="title">
     <input type="submit">
     <input type="hidden" name="target_user" value="{{.OwnerOfPage}}">
+    <!--<input type="hidden" name="anti_csrf_token" value="{ {.CSRFToken} }">-->
 </form>
 <textarea class="typing" id="textarea_form" rows="4" cols="50" name="text" form="addnote_form"></textarea>
 <br>
@@ -44,7 +45,7 @@
     {{ else }}
     <p>
         There are no notes.
-        (<a href="#" onclick="window.location.href=window.location.href">Reload</a>)
+        (<a id="reload_link" href="#">Reload</a>)
     </p>
     {{ end }}
 </div>
